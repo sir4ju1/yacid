@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "name": "naomiapi",
+      "name": "yacid",
       "script": "npm",
       "watch": true,
       "ignore_watch": [
