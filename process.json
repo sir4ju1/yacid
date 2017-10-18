@@ -1,0 +1,17 @@
+{
+  "apps": [
+    {
+      "name": "naomiapi",
+      "script": "npm",
+      "watch": true,
+      "ignore_watch": [
+        "node_modules",
+        "build"
+      ],
+      "args": "run dev",
+      "env": {
+        "NODE_ENV": "prodution"
+      }
+    }
+  ]
+}

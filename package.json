@@ -1,0 +1,35 @@
+{
+  "name": "naomifauxapi",
+  "version": "1.0.0",
+  "description": "CI/CD Agent",
+  "main": "index.js",
+  "scripts": {
+    "dev": "microback",
+    "start": "node index.js",
+    "test": "ava -v",
+    "test:cover": "nyc ava --verbose"
+  },
+  "author": "",
+  "license": "ISC",
+  "ava": {
+    "files": [
+      "tests/unit/*.js",
+      "tests/e2e/*.js"
+    ],
+    "require": [
+      "babel-register"
+    ],
+    "babel": "inherit"
+  },
+  "dependencies": {
+    "microback": "latest",
+    "nodegit": "^0.20.2",
+    "shelljs": "^0.7.8",
+    "vso-node-api": "^6.2.8-preview"
+  },
+  "devDependencies": {
+    "ava": "^0.22.0",
+    "nyc": "^11.1.0",
+    "supertest": "^3.0.0"
+  }
+}

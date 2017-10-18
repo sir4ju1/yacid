@@ -1,0 +1,8 @@
+node_modules
+.nuxt
+dist
+npm-debug.log
+.DS_Store
+.env
+build
+.nyc_output
