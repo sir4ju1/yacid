@@ -1,9 +1,8 @@
 import { RestGen, route } from 'microback'
 import crypto from 'crypto'
 import Pull from 'helper/git'
+import Shell from 'helper/shell'
 import Project from 'model/project'
-import shell from 'shelljs'
-import { spawnSync, spawn, exec, execSync } from 'child_process'
 
 export default class ProjectRest extends RestGen {
   constructor () {
@@ -41,7 +40,7 @@ export default class ProjectRest extends RestGen {
     ctx.body = { success: true, data: result }
   }
 
-  @route('post', 'pull/:project')
+  @route('post', ':project/pull')
   async pull (ctx) {
     try {
       var project = await Project.findOne({ _id: ctx.params.project }).exec()
@@ -52,23 +51,13 @@ export default class ProjectRest extends RestGen {
         var dec = decipher.update(project.password, 'hex', 'utf8')
         dec += decipher.final('utf8')
         var oid = await Pull(project.location, project.user, dec)
-        // var oid = { oid: 0 }
         var status = ['No change']
         var error = []
         var pid = []
-        if (project.previous_oid && project.previous_oid == oid.oid) {
-          shell.set('-e')
-          var env = require('dotenv').config({ path: `${project.location}/.env` })
-          for (var i = 0; i < project.args.length; i++) {            
-            const result = shell.exec(project.args[i], { cwd: project.location, env: env.parsed })
-            pid.push(result.pid)
-            if (result.code !== 0) {
-              error.push(result.stderr)
-              break
-            } else {
-              status.push(result.stdout)
-            }
-          }        
+        if (project.previous_oid && project.previous_oid !== oid.oid) {
+          const result = Shell.exec(project.args, project.location)
+          status.concat(result.status)
+          error.concat(result.error)
         }
         project.previous_oid = oid.oid
         await project.save()
