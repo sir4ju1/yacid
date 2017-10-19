@@ -36,7 +36,7 @@ export default class ProjectRest extends RestGen {
     ctx.body = { success: true, data: result }
   }
 
-  @route('get', ':project/pull')
+  @route('post', ':project/pull')
   async pull (ctx) {
     try {
       console.log(ctx.params.project)
