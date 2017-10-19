@@ -3,15 +3,16 @@ import path from 'path'
 import fs from 'fs'
 
 const exec = (args, cwd) => {
-  let error = [], status = [], env = {}
+  let error = [], status = [], pid = [], env = {}
   shell.set('-e')
   const envPath = path.join(cwd, '.env')
+  console.log(envPath)
   if (fs.existsSync(envPath)) {
     var dotenv = require('dotenv').config({ path: envPath })
     env = dotenv.parsed
   }
   env['HOME'] = process.env.HOME || process.env.HOMEPATH
-  for (var i = 0; i < project.args.length; i++) {
+  for (var i = 0; i < args.length; i++) {
     const result = shell.exec(args[i], { cwd, env })
     pid.push(result.pid)
     if (result.code !== 0) {
@@ -21,8 +22,8 @@ const exec = (args, cwd) => {
       status.push(result.stdout)
     }
   }
-  return { status, error }
+  return { pid, status, error }
 }
 
-export default exec
+export default { exec }
 
