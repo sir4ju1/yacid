@@ -9,6 +9,10 @@ const Project = model({
     user: String,
     password: String,
     previous_oid: String,
+    branch: {
+      type: String,
+      default: 'master'
+    },
     args: [String]
   }
 })

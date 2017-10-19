@@ -10,7 +10,7 @@ export default class ProjectRest extends RestGen {
   }
   async find (ctx) {
     try {
-      const projects = await Project.find().select({ name: 1, location: 1, args: 1, previous_oid: 1 }).exec()
+      const projects = await Project.find().select({ name: 1, location: 1, branch: 1, args: 1, previous_oid: 1 }).exec()
       ctx.body = { success: true, data: projects }
     } catch (error) {
       ctx.body = { success: false, error }
@@ -39,11 +39,10 @@ export default class ProjectRest extends RestGen {
   @route('post', ':project/pull')
   async pull (ctx) {
     try {
-      console.log(ctx.params.project)
       var project = await Project.findOne({ _id: ctx.params.project }).exec()
       if (project) {
         const dec = Auth.decrypt(project.password)
-        var oid = await Pull(project.location, project.user, dec)
+        var oid = await Pull(project.location, project.user, dec, project.branch)
         var result = {}
         if (project.previous_oid && project.previous_oid !== oid.oid) {
           result = Shell.exec(project.args, project.location)

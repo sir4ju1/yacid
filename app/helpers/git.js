@@ -1,6 +1,6 @@
 import Git from 'nodegit'
 
-async function pull (repo, user, password) {
+async function pull (repo, user, password, branch) {
   try {
     const repository = await Git.Repository.open(repo)
     await repository.fetchAll({
@@ -10,7 +10,7 @@ async function pull (repo, user, password) {
         }
       }
     })
-    const oid = await repository.mergeBranches('master', 'origin/master')
+    const oid = await repository.rebaseBranches(branch, `origin/${branch}`)
     return { oid, merged: true }
   } catch (error) {
     return { merged: false }
