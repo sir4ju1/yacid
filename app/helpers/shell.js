@@ -6,12 +6,12 @@ const exec = (args, cwd) => {
   let error = [], status = [], pid = [], env = {}
   shell.set('-e')
   const envPath = path.join(cwd, '.env')
-  console.log(envPath)
   if (fs.existsSync(envPath)) {
     var dotenv = require('dotenv').config({ path: envPath })
     env = dotenv.parsed
   }
   env['HOME'] = process.env.HOME || process.env.HOMEPATH
+  env['PATH'] = process.env.PATH
   for (var i = 0; i < args.length; i++) {
     const result = shell.exec(args[i], { cwd, env })
     pid.push(result.pid)
