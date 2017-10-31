@@ -3,17 +3,60 @@ import Auth from 'helper/auth'
 import Pull from 'helper/git'
 import Shell from 'helper/shell'
 import Project from 'model/project'
+import WorkItem from 'model/workitem'
+import Iteration from 'model/iteration'
 
 export default class ProjectRest extends RestGen {
   constructor () {
-    super('project')
+    super('project', Project)
   }
   async find (ctx) {
     try {
-      const projects = await Project.find().select({ name: 1, location: 1, branch: 1, args: 1, previous_oid: 1 }).exec()
+      const projects = await Project.find().select({ name: 1 }).exec()
       ctx.body = { success: true, data: projects }
     } catch (error) {
       ctx.body = { success: false, error }
+    }
+  }
+  @route('get', 'statistic')
+  async statistic (ctx) {
+    try {
+      let projects = await Project.find({ status: 'active' }).select({ user: 0, password: 0 }).populate('repos').populate('iterations').populate('members').exec()
+      projects = JSON.parse(JSON.stringify(projects))
+      for (let i = 0; i < projects.length; i++) {
+        let project = projects[i]
+        const count = await WorkItem.count({ project: project.tfs_id })
+        const ccount = await WorkItem.count({ project: project.tfs_id, state: 'Closed' })
+        project.taskCount = count
+        project.taskClosed = ccount
+        for (let j = 0; j < project.members.length; j++) {
+          const member = project.members[j]
+          const mcount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'New' })
+          const macount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Active' })
+          const mccount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Closed' })
+          member.taskCount = mcount
+          member.taskActive = macount
+          member.taskClosed = mccount
+        }
+        for (let j = 0; j < project.iterations.length; j++) {
+          const iteration = project.iterations[j]
+          const mcount = await WorkItem.count({ project: project.tfs_id, iteration: iteration.name, $or: [{ state: 'New' }, { state: 'Active' }] })
+          iteration.taskCount = mcount
+        }
+      }
+      ctx.body = { success: true, data: projects }
+    } catch (error) {
+      ctx.body = { success: false, error: error.message }
+    }
+  }
+  @route('get', ':project/workitems')
+  async findWorkItems (ctx) {
+    try {
+      const project = ctx.params.project
+      const workitems = await WorkItem.find({ project, type: 'User Story' }).populate('tasks').exec()
+      ctx.body = { success: true, data: workitems }
+    } catch (error) {
+      ctx.body = { success: false, error: error.message }
     }
   }
 
@@ -36,13 +79,32 @@ export default class ProjectRest extends RestGen {
     ctx.body = { success: true, data: result }
   }
 
-  @route('post', ':project/pull')
+  async remove (ctx) {
+    const id = ctx.params.id
+    const result = await Project.remove({ _id: id })
+    ctx.body = { success: true }
+  }
+  @route('patch', ':project/close')
+  async close (ctx) {
+    const id = ctx.params.project
+    const result = await Project.update({ _id: id }, { status: 'closed' })
+    ctx.body = { success: true, data: result }
+  }
+  @route('patch', ':milestone/release')
+  async release (ctx) {
+    const id = ctx.params.milestone
+    const result = await Iteration.update({ _id: id }, { status: 'released' })
+    ctx.body = { success: true, data: result }
+  }
+  @route('post', ':project/pull/:branch')
   async pull (ctx) {
     try {
-      var project = await Project.findOne({ _id: ctx.params.project }).exec()
+      const branchId = ctx.params.branch
+      var project = await Project.findOne({ _id: ctx.params.project }).populate('repos').exec()
       if (project) {
         const dec = Auth.decrypt(project.password)
-        var oid = await Pull(project.location, project.user, dec, project.branch)
+        const branch = project.repos.find(r => r.id === branchId)
+        var oid = await Pull(branch.location, project.user, dec, branch.branch)
         var result = {}
         if (project.previous_oid && project.previous_oid !== oid.oid) {
           result = Shell.exec(project.args, project.location)

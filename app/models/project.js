@@ -1,19 +1,30 @@
 import { model } from 'microback'
-import crypto from 'crypto'
 
 const Project = model({
   name: 'Project',
   schema: {
     name: String,
-    location: String,
     user: String,
     password: String,
-    previous_oid: String,
-    branch: {
+    repos: [{
+      type: 'ObjectId',
+      ref: 'Repo'
+    }],
+    tfs_id: String,
+    tfs_name: String,
+    description: String,
+    status: {
       type: String,
-      default: 'master'
+      default: 'active'
     },
-    args: [String]
+    iterations: [{
+      type: 'ObjectId',
+      ref: 'Iteration'
+    }],
+    members: [{
+      type: 'ObjectId',
+      ref: 'Team'
+    }]
   }
 })
 
