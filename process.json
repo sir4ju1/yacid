@@ -8,10 +8,7 @@
         "node_modules",
         "build"
       ],
-      "args": "run dev",
-      "env": {
-        "NODE_ENV": "prodution"
-      }
+      "args": "run dev"
     }
   ]
 }
