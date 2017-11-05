@@ -54,7 +54,8 @@ export default class ProjectRest extends RestGen {
   async findWorkItems (ctx) {
     try {
       const project = ctx.params.project
-      const workitems = await WorkItem.find({ project, type: 'User Story' }).populate('tasks').exec()
+      const projectObj = await Project.findOne({ _id: project }).select({ tfs_id: 1 }).exec()
+      const workitems = await WorkItem.find({ project: projectObj.tfs_id, type: 'User Story' }).populate('tasks').exec()
       ctx.body = { success: true, data: workitems }
     } catch (error) {
       ctx.body = { success: false, error: error.message }

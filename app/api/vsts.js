@@ -78,20 +78,16 @@ class VstsRest extends RestGen {
   async workitems (ctx) {
     const project = ctx.params.project
     const wit = webApi.getWorkItemTrackingApi()
-    const wits = await wit.getReportingLinks(project)
+    const wits = await wit.queryByWiql({ query: `SELECT [System.Id] FROM WorkItemLinks WHERE ([Source].[System.TeamProject] = @project AND  [Source].[System.WorkItemType] IN GROUP 'Microsoft.RequirementCategory') AND ([System.Links.LinkType] <> '') And ([Target].[System.State] <> 'Removed' AND [Target].[System.WorkItemType] NOT IN GROUP 'Microsoft.FeatureCategory') mode(MustContain)` }, { projectId: project })
     let data = new Map()
     let ids = new Map()
-    wits.values.forEach(d => {
-      if (!data.has(d.sourceId)) {
-        ids.set(d.sourceId, {})
-        ids.set(d.targetId, {})
-        let tids = new Set()
-        tids.add(d.targetId)
-        data.set(d.sourceId, tids)
+    wits.workItemRelations.forEach(d => {
+      if (d.rel && d.rel === 'System.LinkTypes.Hierarchy-Forward') {
+        data.get(d.source.id).add(d.target.id)
       } else {
-        ids.set(d.targetId, {})
-        data.get(d.sourceId).add(d.targetId)
+        data.set(d.target.id, new Set())
       }
+      ids.set(d.target.id, {})
     })
     var workItems = await wit.getWorkItems([...ids.keys()])
     workItems.forEach(w => {
@@ -143,15 +139,42 @@ class VstsRest extends RestGen {
         await wdb.save()
       }
     }
-    ctx.body = { success: true, workItems }
+    ctx.body = { success: true }
   }
   @route('get', 'test/:project')
   async test (ctx) {
-    const id = ctx.params.project
-    const api = webApi.getCoreApi()
-    const items = await api.getTeams(id)
-    const team = await api.getTeamMembers(id, items[0].id)
-    ctx.body = team
+    try {
+      const project = ctx.params.project
+      const wit = webApi.getWorkItemTrackingApi()
+      const wits = await wit.getReportingLinks(project)
+      const dids = await wit.getDeletedWorkItemReferences(project)
+      let del = new Set()
+      dids.forEach(d => del.add(d.id))
+     
+      let data = new Map()
+      let ids = new Map()
+      wits.values.forEach(d => {
+        if (!del.has(d.sourceId) && !del.has(d.targetId)) {
+          if (!data.has(d.sourceId)) {
+            ids.set(d.sourceId, {})
+            ids.set(d.targetId, {})
+            let tids = new Set()
+            tids.add(d.targetId)
+            data.set(d.sourceId, tids)
+          } else {
+            ids.set(d.targetId, {})
+            data.get(d.sourceId).add(d.targetId)
+          }
+        }
+      })
+      var workItems = await wit.getWorkItems([...ids.keys()])
+      workItems.forEach(w => {
+        ids.set(w.id, w)
+      })
+      ctx.body = [...ids.values()]
+    } catch (error) {
+      console.log(error)
+    }
   }
 }
 
