@@ -29,11 +29,12 @@ export default class ProjectRest extends RestGen {
         const ccount = await WorkItem.count({ project: project.tfs_id, state: 'Closed' })
         project.taskCount = count
         project.taskClosed = ccount
+        const activeIterations = project.iterations.filter(i => i.status === 'plan').map(i => i.name)
         for (let j = 0; j < project.members.length; j++) {
           const member = project.members[j]
-          const mcount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'New' })
-          const macount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Active' })
-          const mccount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Closed' })
+          const mcount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'New', iteration: { '$in': activeIterations } })
+          const macount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Active', iteration: { '$in': activeIterations } })
+          const mccount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Closed', iteration: { '$in': activeIterations } })
           member.taskCount = mcount
           member.taskActive = macount
           member.taskClosed = mccount
