@@ -25,8 +25,8 @@ export default class ProjectRest extends RestGen {
       projects = JSON.parse(JSON.stringify(projects))
       for (let i = 0; i < projects.length; i++) {
         let project = projects[i]
-        const count = await WorkItem.count({ project: project.tfs_id })
-        const ccount = await WorkItem.count({ project: project.tfs_id, state: 'Closed' })
+        const count = await WorkItem.count({ project: project.tfs_id, type: 'User Story' })
+        const ccount = await WorkItem.count({ project: project.tfs_id, state: 'Closed', type: 'User Story' })
         project.taskCount = count
         project.taskClosed = ccount
         const activeIterations = project.iterations.filter(i => i.status === 'plan').map(i => i.name)
