@@ -37,6 +37,27 @@ class VstsRest extends RestGen {
         iterations: [],
         members: []
       }, options)
+    }
+    ctx.body = { success: true }
+  }
+  @route('get', 'project/:project/import')
+  async projects (ctx) {
+    try {
+      const core = webApi.getCoreApi()
+      const p = await core.getProject(ctx.params.project)
+      const wit = webApi.getWorkApi()
+      const gitApi = webApi.getGitApi()
+      
+      let options = { upsert: true, new: true, setDefaultsOnInsert: true }
+      const project = await Project.findOneAndUpdate({ tfs_id: p.id }, {
+        tfs_id: p.id,
+        name: p.name,
+        tfs_name: p.name,
+        description: p.desciption,
+        repos: [],
+        iterations: [],
+        members: []
+      }, options)
       if (project.status === 'active') {
         const its = await wit.getTeamIterations({ projectId: p.id })
         for (let j = 0; j < its.length; j++) {
@@ -71,11 +92,15 @@ class VstsRest extends RestGen {
         }
         await project.save()
       }
+      ctx.body = { success: true }
+  
+    } catch (error) {
+      ctx.body = { success: false, error: error.message }
     }
-    ctx.body = { success: true }
   }
   @route('get', ':project/workitems')
   async workitems (ctx) {
+   try {
     const project = ctx.params.project
     const wit = webApi.getWorkItemTrackingApi()
     const wits = await wit.queryByWiql({ query: `SELECT [System.Id] FROM WorkItemLinks WHERE ([Source].[System.TeamProject] = @project AND  [Source].[System.WorkItemType] IN GROUP 'Microsoft.RequirementCategory') AND ([System.Links.LinkType] <> '') And ([Target].[System.State] <> 'Removed' AND [Target].[System.WorkItemType] NOT IN GROUP 'Microsoft.FeatureCategory') mode(MustContain)` }, { projectId: project })
@@ -140,6 +165,9 @@ class VstsRest extends RestGen {
       }
     }
     ctx.body = { success: true }
+   } catch (error) {
+     ctx.body = { success: false, error: error.message }
+   }
   }
   @route('get', 'test/:project')
   async test (ctx) {

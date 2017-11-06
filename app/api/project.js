@@ -12,7 +12,7 @@ export default class ProjectRest extends RestGen {
   }
   async find (ctx) {
     try {
-      const projects = await Project.find().select({ name: 1, status: 1 }).exec()
+      const projects = await Project.find().select({ name: 1, status: 1, tfs_id: 1 }).exec()
       ctx.body = { success: true, data: projects }
     } catch (error) {
       ctx.body = { success: false, error }
