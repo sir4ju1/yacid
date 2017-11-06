@@ -103,7 +103,7 @@ class VstsRest extends RestGen {
    try {
     const project = ctx.params.project
     const wit = webApi.getWorkItemTrackingApi()
-    const wits = await wit.queryByWiql({ query: `SELECT [System.Id] FROM WorkItemLinks WHERE ([Source].[System.TeamProject] = @project AND  [Source].[System.WorkItemType] IN GROUP 'Microsoft.RequirementCategory') AND ([System.Links.LinkType] <> '') And ([Target].[System.State] <> 'Removed' AND [Target].[System.WorkItemType] NOT IN GROUP 'Microsoft.FeatureCategory') mode(MustContain)` }, { projectId: project })
+    const wits = await wit.queryByWiql({ query: `Select [System.Id] From WorkItemLinks WHERE (Source.[System.TeamProject] = @project and Source.[System.State] <> 'Removed') and ([System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward') and (Target.[System.WorkItemType] <> '') mode(Recursive)` }, { projectId: project })
     let data = new Map()
     let ids = new Map()
     wits.workItemRelations.forEach(d => {
@@ -164,7 +164,7 @@ class VstsRest extends RestGen {
         await wdb.save()
       }
     }
-    ctx.body = { success: true }
+    ctx.body = { success: true, data: wits }
    } catch (error) {
      ctx.body = { success: false, error: error.message }
    }
