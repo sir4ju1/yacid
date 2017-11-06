@@ -3152,9 +3152,9 @@ methods@^1.0.1, methods@^1.1.1, methods@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
 
-microback@0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/microback/-/microback-0.2.2.tgz#75a281fe47fde27cde7556354900ba3ba2090f68"
+microback@0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/microback/-/microback-0.2.3.tgz#176f88f5cee1ff9f5715eb0606f097d3666193b1"
   dependencies:
     babel-core "^6.26.0"
     babel-loader "^7.1.2"

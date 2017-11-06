@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "microback",
+    "build": "microback build",
     "start": "node index.js",
     "test": "ava -v",
     "test:cover": "nyc ava --verbose"
@@ -22,7 +23,7 @@
     "babel": "inherit"
   },
   "dependencies": {
-    "microback": "0.2.2",
+    "microback": "0.2.3",
     "nodegit": "^0.20.3",
     "shelljs": "^0.7.8",
     "vso-node-api": "^6.2.8-preview"
