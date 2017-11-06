@@ -32,13 +32,13 @@ class VstsRest extends RestGen {
         tfs_id: p.id,
         name: p.name,
         tfs_name: p.name,
-        description: p.desciption,
+        description: p.description,
         repos: [],
         iterations: [],
         members: []
       }, options)
     }
-    ctx.body = { success: true }
+    ctx.body = { success: true, data: projects }
   }
   @route('get', 'project/:project/import')
   async projectImport (ctx) {
@@ -53,7 +53,7 @@ class VstsRest extends RestGen {
         tfs_id: p.id,
         name: p.name,
         tfs_name: p.name,
-        description: p.desciption,
+        description: p.description,
         repos: [],
         iterations: [],
         members: []
