@@ -41,7 +41,7 @@ class VstsRest extends RestGen {
     ctx.body = { success: true }
   }
   @route('get', 'project/:project/import')
-  async projects (ctx) {
+  async projectImport (ctx) {
     try {
       const core = webApi.getCoreApi()
       const p = await core.getProject(ctx.params.project)
