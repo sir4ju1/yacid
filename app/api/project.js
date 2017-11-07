@@ -5,6 +5,7 @@ import Shell from 'helper/shell'
 import Project from 'model/project'
 import WorkItem from 'model/workitem'
 import Iteration from 'model/iteration'
+import Repo from 'model/repo'
 
 export default class ProjectRest extends RestGen {
   constructor () {
@@ -98,14 +99,21 @@ export default class ProjectRest extends RestGen {
     const result = await Iteration.update({ _id: id }, { status: 'released' })
     ctx.body = { success: true, data: result }
   }
-  @route('post', ':project/pull/:branch')
+  @route('patch', 'repo/:id')
+  async repoUpdate (ctx) {
+    const id = ctx.params.id
+    const body = ctx.request.body
+    const result = await Repo.update({ _id: id }, body)
+    ctx.body = { success: true, data: result }
+  }
+  @route('post', ':project/pull/:repo')
   async pull (ctx) {
     try {
-      const branchId = ctx.params.branch
+      const repoId = ctx.params.repo
       var project = await Project.findOne({ _id: ctx.params.project }).populate('repos').exec()
       if (project) {
         const dec = Auth.decrypt(project.password)
-        const branch = project.repos.find(r => r.id === branchId)
+        const branch = project.repos.find(r => r.id === repoId)
         var oid = await Pull(branch.location, project.user, dec, branch.branch)
         var result = {}
         if (project.previous_oid && project.previous_oid !== oid.oid) {
