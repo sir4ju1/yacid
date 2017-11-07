@@ -32,10 +32,7 @@ class VstsRest extends RestGen {
         tfs_id: p.id,
         name: p.name,
         tfs_name: p.name,
-        description: p.desciption,
-        repos: [],
-        iterations: [],
-        members: []
+        description: p.desciption    
       }, options)
     }
     ctx.body = { success: true }
