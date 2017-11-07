@@ -19,7 +19,7 @@ export default class WorkItemRest extends RestGen {
       allData.forEach((t) => {
         let p = Object.assign({}, t)
         delete p.parent
-        if (!data.has(t.parent._id)){          
+        if (!data.has(t.parent._id)){
           if (!t.parent.data) {
             t.parent.data = []
           }
@@ -33,11 +33,20 @@ export default class WorkItemRest extends RestGen {
           parent.data.push(p)
         }
       }, this)
-      ctx.body = { success: true, data: [...data.values()] }
+      let wits =  [...data.values()]
+      wits.sort((a, b) => {
+        if (a.iteration < b.iteration) {
+          return -1
+        } else if (a.iteration > b.iteration) {
+          return 1
+        }
+        return 0
+      })
+      ctx.body = { success: true, data: wits }
     } catch (error) {
       ctx.body = { success: false, error: error.message }
     }
-  }
+  } 
   @route('post', 'state')
   async projectByStatus (ctx) {
     try {
