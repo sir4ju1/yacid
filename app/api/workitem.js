@@ -67,7 +67,7 @@ export default class WorkItemRest extends RestGen {
     try {
       const project = ctx.request.body.project
       const iteration = ctx.request.body.iteration
-      const data = await WorkItem.find({ project, iteration, type: 'User Story', state })
+      const data = await WorkItem.find({ project, iteration, type: 'User Story' })
         .select({ title: 1, iteration: 1, closedDate: 1, activatedDate: 1, tasks: 1 })
         .sort({ iteration: 1 })
         .populate('tasks')
