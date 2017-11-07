@@ -5,6 +5,8 @@ export default model({
   schema: {
     rid: String,
     name: String,
+    user: String,
+    password: String,
     previous_oid: String,
     location: String,
     branch: {

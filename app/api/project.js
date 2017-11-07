@@ -62,15 +62,15 @@ export default class ProjectRest extends RestGen {
       ctx.body = { success: false, error: error.message }
     }
   }
-
-  async create (ctx) {
+  @route('patch', 'repo')
+  async repoCreate (ctx) {
     try {
       const body = ctx.request.body
       if (body.password) {
         const crypted = Auth.encrypt(body.password)
         body.password = crypted
       }
-      var project = await Project.create(body)
+      var project = await Repo.update({ _id: body.id }, body)
       ctx.body = { success: true, data: project }
     } catch (error) {
       ctx.body = { success: true, error }
@@ -106,41 +106,41 @@ export default class ProjectRest extends RestGen {
     const result = await Repo.update({ _id: id }, body)
     ctx.body = { success: true, data: result }
   }
-  @route('post', ':project/pull/:repo')
+  @route('post', 'repo/:repo/pull')
   async pull (ctx) {
     try {
       const repoId = ctx.params.repo
-      var project = await Project.findOne({ _id: ctx.params.project }).populate('repos').exec()
-      if (project) {
-        const dec = Auth.decrypt(project.password)
-        const branch = project.repos.find(r => r.id === repoId)
-        var oid = await Pull(branch.location, project.user, dec, branch.branch)
+      var repo = await Repo.findOne({ _id: repoId }).exec()
+      if (repo) {
+        const dec = Auth.decrypt(repo.password)
+        const branch = repo.repos.find(r => r.id === repoId)
+        var oid = await Pull(branch.location, repo.user, dec, branch.branch)
         var result = {}
-        if (project.previous_oid && project.previous_oid !== oid.oid) {
-          result = Shell.exec(project.args, project.location)
+        if (repo.previous_oid && repo.previous_oid !== oid.oid) {
+          result = Shell.exec(repo.args, repo.location)
         } else {
           result.status = 'No Change'
         }
-        project.previous_oid = oid.oid
-        await project.save()
+        repo.previous_oid = oid.oid
+        await repo.save()
         ctx.body = { success: true, data: result }
       } else {
-        ctx.body = { success: false, error: 'Project not found!' }
+        ctx.body = { success: false, error: 'Repo not found!' }
       }
     } catch (e) {
       ctx.body = { success: false, error: e.message }
     }
   }
 
-  @route('get', ':project/rebuild')
+  @route('get', 'repo/:repo/rebuild')
   async rebuild (ctx) {
     try {
-      var project = await Project.findOne({ _id: ctx.params.project }).exec()
-      if (project) {
-        const result = Shell.exec(project.args, project.location)
+      var repo = await Repo.findOne({ _id: ctx.params.repo }).exec()
+      if (repo) {
+        const result = Shell.exec(repo.args, repo.location)
         ctx.body = { success: true, data: result }
       } else {
-        ctx.body = { success: false, error: 'Project not found!' }
+        ctx.body = { success: false, error: 'Repo not found!' }
       }
     } catch (e) {
       ctx.body = { success: false, error: e.message }
