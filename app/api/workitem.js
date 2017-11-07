@@ -54,7 +54,9 @@ export default class WorkItemRest extends RestGen {
       const state = ctx.request.body.state
       const isAccepted = ctx.request.body.isAccepted
       const data = await WorkItem.find({ project, type: 'User Story', state, isAccepted })
-        .select({ title: 1, iteration: 1, closedDate: 1, activatedDate: 1  }).exec()
+        .select({ title: 1, iteration: 1, closedDate: 1, activatedDate: 1  })
+        .sort({ iteration: 1 })
+        .exec()
       ctx.body = { success: true, data }
     } catch (error) {
       ctx.body = { success: false, error: error.message }
@@ -67,6 +69,7 @@ export default class WorkItemRest extends RestGen {
       const iteration = ctx.request.body.iteration
       const data = await WorkItem.find({ project, iteration, type: 'User Story', state })
         .select({ title: 1, iteration: 1, closedDate: 1, activatedDate: 1, tasks: 1 })
+        .sort({ iteration: 1 })
         .populate('tasks')
         .exec()
       ctx.body = { success: true, data }
