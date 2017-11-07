@@ -108,12 +108,6 @@ export default class ProjectRest extends RestGen {
     const result = await Repo.findOne({ _id: id }).select({ password: 0 }).exec()
     ctx.body = { success: true, data: result }
   }
-  @route('patch', 'repo')
-  async repoUpdate (ctx) {
-    const body = ctx.request.body
-    const result = await Repo.update({ _id: body.id }, body)
-    ctx.body = { success: true, data: result }
-  }
   @route('post', 'repo/:repo/pull')
   async pull (ctx) {
     try {
