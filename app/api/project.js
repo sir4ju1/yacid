@@ -43,10 +43,10 @@ export default class ProjectRest extends RestGen {
         }
         for (let j = 0; j < project.iterations.length; j++) {
           const iteration = project.iterations[j]
-          const mcount = await WorkItem.count({ project: project.tfs_id, iteration: iteration.name })
-          const mccount = await WorkItem.count({ project: project.tfs_id, iteration: iteration.name, state: 'Closed' })
-          iteration.taskCount = mcount
-          iteration.taskClosed = mccount
+          const icount = await WorkItem.count({ project: project.tfs_id, iteration: iteration.name })
+          const iccount = await WorkItem.count({ project: project.tfs_id, iteration: iteration.name, state: 'Closed' })
+          iteration.taskCount = icount
+          iteration.taskClosed = iccount
         }
       }
       ctx.body = { success: true, data: projects }
