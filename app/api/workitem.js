@@ -12,8 +12,15 @@ export default class WorkItemRest extends RestGen {
     try {
       const project = ctx.request.body.project
       const assignedTo = ctx.request.body.assignedTo
-      const data = await WorkItem.find({ project, assignedTo, type: { $in: ['Task', 'Bug']}, state: { $ne: 'Closed' } })
-        .select({ title: 1, iteration: 1, state: 1, type: 1, activatedDate: 1 }).exec()
+      const tasks = await WorkItem.find({ project, assignedTo, type: { $in: ['Task', 'Bug']}, state: { $ne: 'Closed' } })
+        .select({ parent: 1 }).exec()
+      let parents = new Set()
+      tasks.forEach((t) => {
+        parents.add(t.parent)
+      }, this)
+      const data = await WorkItem.find({ _id: { $in: [...parents.keys()] } })
+        .populate('tasks')
+        .exec()
       ctx.body = { success: true, data }
     } catch (error) {
       ctx.body = { success: false, error: error.message }
