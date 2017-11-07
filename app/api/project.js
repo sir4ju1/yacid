@@ -22,7 +22,10 @@ export default class ProjectRest extends RestGen {
   @route('get', 'statistic')
   async statistic (ctx) {
     try {
-      let projects = await Project.find({ status: 'active' }).select({ user: 0, password: 0 }).populate('repos').populate('iterations').populate('members').exec()
+      let projects = await Project.find({ status: 'active' })
+      .populate({ path: 'repos', select: { name: 1 } })
+      .populate('iterations')
+      .populate('members').exec()
       projects = JSON.parse(JSON.stringify(projects))
       for (let i = 0; i < projects.length; i++) {
         let project = projects[i]
