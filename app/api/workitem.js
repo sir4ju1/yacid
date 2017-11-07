@@ -23,10 +23,13 @@ export default class WorkItemRest extends RestGen {
           if (!t.parent.data) {
             t.parent.data = []
           }
+          p.key = p._id
+          t.parent.key = t.parent._id
           t.parent.data.push(p)
           data.set(t.parent._id, t.parent)
         } else {
           const parent = data.get(t.parent._id)
+          p.key = p._id
           parent.data.push(p)
         }
       }, this)
