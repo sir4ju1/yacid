@@ -24,7 +24,7 @@ export default class WorkItemRest extends RestGen {
             t.parent.data = []
           }
           t.parent.data.push(p)
-          parents.set(t.parent._id, t.parent)
+          data.set(t.parent._id, t.parent)
         } else {
           const parent = data.get(t.parent._id)
           parent.data.push(p)
