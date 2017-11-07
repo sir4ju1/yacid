@@ -24,7 +24,8 @@ export default class WorkItemRest extends RestGen {
     try {
       const project = ctx.request.body.project
       const state = ctx.request.body.state
-      const data = await WorkItem.find({ project, type: 'User Story', state })
+      const isAccepted = ctx.request.body.isAccepted
+      const data = await WorkItem.find({ project, type: 'User Story', state, isAccepted })
         .select({ title: 1, iteration: 1, closedDate: 1, activatedDate: 1  }).exec()
       ctx.body = { success: true, data }
     } catch (error) {
