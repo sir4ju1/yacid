@@ -17,17 +17,17 @@ export default class WorkItemRest extends RestGen {
       let allData = JSON.parse(JSON.stringify(tasks))
       let data = new Map()
       allData.forEach((t) => {
-        if (!data.has(t.parent._id)){
-          delete t.parent
-          if (!t.data) {
-            t.data = []
+        let p = Object.assign({}, t)
+        delete p.parent
+        if (!data.has(t.parent._id)){          
+          if (!t.parent.data) {
+            t.parent.data = []
           }
-          t.parent.data.push(t)
+          t.parent.data.push(p)
           parents.set(t.parent._id, t.parent)
         } else {
           const parent = data.get(t.parent._id)
-          delete t.parent
-          parent.data.push(t)
+          parent.data.push(p)
         }
       }, this)
       ctx.body = { success: true, data: [...data.values()] }
