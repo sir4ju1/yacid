@@ -45,4 +45,14 @@ export default class WorkItemRest extends RestGen {
       ctx.body = { success: false, error: error.message }
     }
   }
+  @route('get', 'accept/:id')
+  async acceptWorkItem (ctx) {
+    try {
+      const id = ctx.params.id
+      const data = await WorkItem.update({ _id, id }, { isAccepted: true, acceptedDated: new Date() })
+      ctx.body = { success: true, data }
+    } catch (error) {
+      ctx.body = { success: false, error: error.message }
+    }
+  }
 }

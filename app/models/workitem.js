@@ -21,6 +21,11 @@ const WorkItem = model({
     activatedDate: Date,
     closedBy: String,
     closedDate: Date,
+    isAccepted: {
+      type: Boolean,
+      default: false
+    },
+    acceptedDate: Date,
     tasks: [{
       type: 'ObjectId',
       ref: 'WorkItem'
