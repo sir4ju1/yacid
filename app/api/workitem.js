@@ -70,9 +70,19 @@ export default class WorkItemRest extends RestGen {
       const data = await WorkItem.find({ project, iteration, type: 'User Story' })
         .select({ title: 1, iteration: 1, closedDate: 1, activatedDate: 1, tasks: 1 })
         .sort({ iteration: 1 })
-        .populate('tasks')
+        .populate({ path: 'tasks', select: { title: 1, iteration: 1, closedDate: 1, activatedDate: 1, tasks: 1 } })
         .exec()
-      ctx.body = { success: true, data }
+      let wits = JSON.parse(JSON.stringify(data))
+      wits.forEach(w => {
+        w.key = w._id
+        w.data = []
+        w.tasks.forEach(t => {
+          t.key = t._id
+          w.data.push(Object.assign({}, t))
+        })
+        delete w.tasks
+      })
+      ctx.body = { success: true, data: wits }
     } catch (error) {
       ctx.body = { success: false, error: error.message }
     }
