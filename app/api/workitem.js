@@ -92,13 +92,22 @@ export default class WorkItemRest extends RestGen {
     const project = ctx.request.body.project
     const data = await WorkItem.aggregate([
       {
+        state: 'Closed',
+        isAccepted: true
+      },
+      {
         $project: {
-          accepted: { $dateToString: { format: "%Y-%m-%d", date: "$acceptedDate" } }
+          accepted: { $dateToString: { format: "%d-%M-%Y", date: "$acceptedDate" } }
         }
       },
       {
-        $match: {
-          isAccepted: true
+        $group: {
+          _id: '$accepted',
+          count: { $sum: 1 },
+          data: {
+            _id: '$_id',
+            title: '$title'
+          }
         }
       }
     ])
