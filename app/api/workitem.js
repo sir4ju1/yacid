@@ -100,7 +100,9 @@ export default class WorkItemRest extends RestGen {
       },
       {
         $project: {
-          accepted: { $dateToString: { format: "%d-%M-%Y", date: "$acceptedDate" } }
+          accepted: { $dateToString: { format: "%d-%m-%Y", date: "$acceptedDate" } },
+          title: 1,
+          closed: { $dateToString: { format: "%d-%m-%Y", date: "$closedDate" } },
         }
       },
       {
@@ -110,8 +112,9 @@ export default class WorkItemRest extends RestGen {
           data: {
             $push: {
               _id: '$_id',
-              title: '$title'
-            }           
+              title: '$title',
+              closed: '$closed'
+            }
           }
         }
       }
