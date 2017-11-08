@@ -108,8 +108,10 @@ export default class WorkItemRest extends RestGen {
           _id: '$accepted',
           count: { $sum: 1 },
           data: {
-            _id: '$_id',
-            title: '$title'
+            $push: {
+              _id: '$_id',
+              title: '$title'
+            }           
           }
         }
       }
