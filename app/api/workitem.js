@@ -8,7 +8,7 @@ export default class WorkItemRest extends RestGen {
     super('workitem')
   }
   @route('post', 'member')
-  async projectByMember (ctx) {
+  async witByMember (ctx) {
     try {
       const project = ctx.request.body.project
       const assignedTo = ctx.request.body.assignedTo
@@ -48,7 +48,7 @@ export default class WorkItemRest extends RestGen {
     }
   } 
   @route('post', 'state')
-  async projectByStatus (ctx) {
+  async witByStatus (ctx) {
     try {
       const project = ctx.request.body.project
       const state = ctx.request.body.state
@@ -63,7 +63,7 @@ export default class WorkItemRest extends RestGen {
     }
   }
   @route('post', 'milestone')
-  async projectByMilestone (ctx) {
+  async witByMilestone (ctx) {
     try {
       const project = ctx.request.body.project
       const iteration = ctx.request.body.iteration
@@ -86,6 +86,23 @@ export default class WorkItemRest extends RestGen {
     } catch (error) {
       ctx.body = { success: false, error: error.message }
     }
+  }
+  @route('post', 'calendar')
+  async witByDate (ctx) {
+    const project = ctx.request.body.project
+    const data = await WorkItem.aggregate([
+      {
+        $project: {
+          accepted: { $dateToString: { format: "%Y-%m-%d", date: "$acceptedDate" } }
+        }
+      },
+      {
+        $match: {
+          isAccepted: true
+        }
+      }
+    ])
+    ctx.body = { success: true, data }
   }
   @route('patch', 'accept/:id')
   async acceptWorkItem (ctx) {
