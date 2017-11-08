@@ -88,7 +88,7 @@ export default class WorkItemRest extends RestGen {
     }
   }
   @route('post', 'calendar')
-  async witByDate (ctx) {
+  async witCalendar (ctx) {
     const project = ctx.request.body.project
     const data = await WorkItem.aggregate([
       {
@@ -100,22 +100,39 @@ export default class WorkItemRest extends RestGen {
       },
       {
         $project: {
-          accepted: { $dateToString: { format: "%d-%m-%Y", date: "$acceptedDate" } },
-          title: 1,
-          closed: { $dateToString: { format: "%d-%m-%Y", date: "$closedDate" } },
+          accepted: { $dateToString: { format: "%d-%m-%Y", date: "$acceptedDate" } }
         }
       },
       {
         $group: {
           _id: '$accepted',
-          count: { $sum: 1 },
-          data: {
-            $push: {
-              _id: '$_id',
-              title: '$title',
-              closed: '$closed'
-            }
-          }
+          count: { $sum: 1 }
+        }
+      }
+    ])
+    ctx.body = { success: true, data }
+  }
+  @route('post', 'date')
+  async witCalendar (ctx) {
+    const project = ctx.request.body.project
+    const date = ctx.request.body.date
+    const data = await WorkItem.aggregate([
+      {
+        $match: {
+          project: project,
+          state: 'Closed',
+          isAccepted: true
+        }
+      },
+      {
+        $project: {
+          accepted: { $dateToString: { format: "%d-%m-%Y", date: "$acceptedDate" } },
+          title: 1, closedDate: 1
+        }
+      },
+      {
+        $match: {
+          $accepted: date
         }
       }
     ])
