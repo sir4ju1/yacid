@@ -92,8 +92,11 @@ export default class WorkItemRest extends RestGen {
     const project = ctx.request.body.project
     const data = await WorkItem.aggregate([
       {
-        state: 'Closed',
-        isAccepted: true
+        $match: {
+          project: project,
+          state: 'Closed',
+          isAccepted: true
+        }
       },
       {
         $project: {
