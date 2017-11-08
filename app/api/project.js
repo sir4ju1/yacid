@@ -93,10 +93,11 @@ export default class ProjectRest extends RestGen {
     const result = await Project.remove({ _id: id })
     ctx.body = { success: true }
   }
-  @route('patch', ':project/close')
-  async close (ctx) {
+  @route('patch', ':project/state/:state')
+  async stateChange (ctx) {
     const id = ctx.params.project
-    const result = await Project.update({ _id: id }, { status: 'closed' })
+    const state = ctx.params.state
+    const result = await Project.update({ _id: id }, { status })
     ctx.body = { success: true, data: result }
   }
   @route('patch', ':milestone/release')
