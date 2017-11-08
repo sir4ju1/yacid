@@ -113,7 +113,7 @@ export default class WorkItemRest extends RestGen {
     ctx.body = { success: true, data }
   }
   @route('post', 'date')
-  async witCalendar (ctx) {
+  async witByDate (ctx) {
     const project = ctx.request.body.project
     const date = ctx.request.body.date
     const data = await WorkItem.aggregate([
