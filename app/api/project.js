@@ -96,7 +96,7 @@ export default class ProjectRest extends RestGen {
   @route('patch', ':project/state/:state')
   async stateChange (ctx) {
     const id = ctx.params.project
-    const state = ctx.params.state
+    const status = ctx.params.state
     const result = await Project.update({ _id: id }, { status })
     ctx.body = { success: true, data: result }
   }
