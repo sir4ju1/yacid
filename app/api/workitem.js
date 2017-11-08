@@ -116,7 +116,7 @@ export default class WorkItemRest extends RestGen {
   async witByDate (ctx) {
     const project = ctx.request.body.project
     const date = ctx.request.body.date
-    const data = await WorkItem.aggregate([
+    const wits = await WorkItem.aggregate([
       {
         $match: {
           project: project,
@@ -127,22 +127,29 @@ export default class WorkItemRest extends RestGen {
       {
         $project: {
           accepted: { $dateToString: { format: "%d-%m-%Y", date: "$acceptedDate" } },
-          title: 1, closedDate: 1
+          title: 1, closedDate: 1, tasks: 1
         }
       },
       {
         $match: {
-          $accepted: date
+          accepted: date
         }
       }
     ])
+    const data = await WorkItem
+      .populate(wits, {
+        path: 'tasks',
+        select: { title: 1, closedDate: 1 },
+        match: { state: 'Closed', isAccepted: true }
+      })
     ctx.body = { success: true, data }
   }
-  @route('patch', 'accept/:id')
-  async acceptWorkItem (ctx) {
+
+  async update (ctx) {
     try {
-      const id = ctx.params.id
-      const data = await WorkItem.update({ _id: id }, { isAccepted: true, acceptedDate: new Date() })
+      const id = ctx.request.body.id
+      const body = ctx.request.body
+      const data = await WorkItem.update({ _id: id }, body)
       ctx.body = { success: true, data }
     } catch (error) {
       ctx.body = { success: false, error: error.message }

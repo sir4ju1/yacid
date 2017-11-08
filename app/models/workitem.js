@@ -26,6 +26,7 @@ const WorkItem = model({
       default: false
     },
     acceptedDate: Date,
+    isOpt: Boolean,
     tasks: [{
       type: 'ObjectId',
       ref: 'WorkItem'
