@@ -87,7 +87,7 @@ export default class WorkItemRest extends RestGen {
       ctx.body = { success: false, error: error.message }
     }
   }
-  @route('get', 'accept/:id')
+  @route('patch', 'accept/:id')
   async acceptWorkItem (ctx) {
     try {
       const id = ctx.params.id
