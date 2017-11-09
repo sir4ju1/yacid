@@ -192,6 +192,7 @@ export default class WorkItemRest extends RestGen {
         $match: {
           project: project,
           state: 'Closed',
+          type: { $ne: 'User Story' },
           isAccepted: true
         }
       },
