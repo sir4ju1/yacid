@@ -167,40 +167,29 @@ class VstsRest extends RestGen {
      ctx.body = { success: false, error: error.message }
    }
   }
-  @route('get', 'test/:project')
-  async test (ctx) {
+  @route('patch', 'wit/state')
+  async witState (ctx) {
     try {
-      const project = ctx.params.project
+      const body = ctx.request.body
+      const workitem = await WorkItem.findOne({ _id: body.id })
       const wit = webApi.getWorkItemTrackingApi()
-      const wits = await wit.getReportingLinks(project)
-      const dids = await wit.getDeletedWorkItemReferences(project)
-      let del = new Set()
-      dids.forEach(d => del.add(d.id))
-     
-      let data = new Map()
-      let ids = new Map()
-      wits.values.forEach(d => {
-        if (!del.has(d.sourceId) && !del.has(d.targetId)) {
-          if (!data.has(d.sourceId)) {
-            ids.set(d.sourceId, {})
-            ids.set(d.targetId, {})
-            let tids = new Set()
-            tids.add(d.targetId)
-            data.set(d.sourceId, tids)
-          } else {
-            ids.set(d.targetId, {})
-            data.get(d.sourceId).add(d.targetId)
-          }
-        }
-      })
-      var workItems = await wit.getWorkItems([...ids.keys()])
-      workItems.forEach(w => {
-        ids.set(w.id, w)
-      })
-      ctx.body = [...ids.values()]
+      const update = await wit.updateWorkItem({ },
+        [{
+          op: 'replace',
+          path: '/fields/System.State',
+          value: body.state
+        }], workitem.wid)
+      workitem.state = update['fields']['System.State']
+      await workitem.save()
+      ctx.body = { success: true }
     } catch (error) {
-      console.log(error)
+      ctx.body = { success: false, error: error.message }
     }
+  }
+  @route('post', ':project/notification')
+  async witNotification (ctx) {
+    const body = ctx.request.body
+    ctx.body = body
   }
 }
 
