@@ -30,7 +30,8 @@ const WorkItem = model({
     tasks: [{
       type: 'ObjectId',
       ref: 'WorkItem'
-    }]
+    }],
+    rank: Number
   }
 })
 

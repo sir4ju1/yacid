@@ -133,10 +133,10 @@ class VstsRest extends RestGen {
         activatedDate: sid['fields']['Microsoft.VSTS.Common.ActivatedDate'],
         closedBy: sid['fields']['Microsoft.VSTS.Common.ClosedBy'],
         closedDate: sid['fields']['Microsoft.VSTS.Common.ClosedDate'],
+        rank: sid['fields']['Microsoft.VSTS.Common.StackRank'] ? sid['fields']['Microsoft.VSTS.Common.StackRank'] : 100000000000,
         tasks: [] }
       let wdb = await WorkItem.findOneAndUpdate({ project, wid: sid.id }, w, options)
       let tasks = []
-      console.log(k)
       for (let sub of d) {
         console.log('sub', sub)
         const tid = ids.get(sub)
@@ -155,7 +155,8 @@ class VstsRest extends RestGen {
           activatedBy: tid['fields']['Microsoft.VSTS.Common.ActivatedBy'],
           activatedDate: tid['fields']['Microsoft.VSTS.Common.ActivatedDate'],
           closedBy: tid['fields']['Microsoft.VSTS.Common.ClosedBy'],
-          closedDate: tid['fields']['Microsoft.VSTS.Common.ClosedDate']
+          closedDate: tid['fields']['Microsoft.VSTS.Common.ClosedDate'],
+          rank: tid['fields']['Microsoft.VSTS.Common.StackRank'] ? tid['fields']['Microsoft.VSTS.Common.StackRank'] : 100000000000,
         }, options)
         wdb.tasks.push(subdb._id)
         await wdb.save()

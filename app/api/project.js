@@ -50,7 +50,7 @@ export default class ProjectRest extends RestGen {
             $count: 'total'
           }
         ])
-        project.taskClosed = ccount[0].total
+        project.taskClosed =  ccount.length ? ccount[0].total : 0 
         const activeIterations = project.iterations.filter(i => i.status === 'plan').map(i => i.name)
         for (let j = 0; j < project.members.length; j++) {
           const member = project.members[j]

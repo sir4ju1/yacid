@@ -56,31 +56,67 @@ export default class WorkItemRest extends RestGen {
       const data = await WorkItem.aggregate([
         {
           $match: {
-            project,
+            project: id,
             type: { $in: ['Task', 'Bug'] },
             state: 'Closed',
             isAccepted: { $ne: true }
           }
-
+          
         },
         {
-          $project: {
-            parent: 1,
-            title: 1,
-            iteration: 1
+          $lookup: {
+            from: 'workitems',
+            localField: 'parent',
+            foreignField: '_id',
+            as: 'par'
           }
+        },
+        {
+          $unwind: '$par'
+        },
+        {
+          $sort: { iteration: 1, rank: 1, wid: 1}
         },
         {
           $group: {
             _id: '$parent',
-            data: { $addToSet: { key: '$_id', title: '$title' } }
+            title: { $first: '$par.title' },
+            rank: { $first: '$par.rank' },
+            iteration: { $first: '$par.iteration'},
+            wid: { $first: '$par.wid'},
+            data: { $addToSet: { _id: '$_id', title: '$title', wid: '$wid', rank: '$rank' } }
+  
           }
         },
+       
         {
-          $sort: {
-            iteration: 1
+          $unwind: '$data'
+        },
+        {
+          $sort: { 'data.rank': 1, 'data.wid': 1 }
+        },
+        {
+          $group: {
+            _id: '$_id',
+            title: { $first: '$title' },
+            rank: { $first: '$rank' },
+            iteration: { $first: '$iteration'},
+            wid: { $first: '$wid'},
+            data: { $push: { _id: '$data._id', title: '$data.title' } }
+  
+          },
+        },
+        {
+          $sort: { 'iteration': 1, 'rank': 1, 'wid': 1 }
+        },
+        {
+          $project: {
+            _id: 1,
+            iteration: 1,
+            title: 1,
+            'data': 1
           }
-        }
+        },
       ])
       ctx.body = { success: true, data }
     } catch (error) {
@@ -202,24 +238,55 @@ export default class WorkItemRest extends RestGen {
           from: 'workitems',
           localField: 'parent',
           foreignField: '_id',
-          asObject: ''
+          as: 'par'
         }
       },
-      // {
-      //   $project: {
-      //     parent: 1,
-      //     title: 1
-      //   }
-      // },
+      {
+        $unwind: '$par'
+      },
+      {
+        $sort: { iteration: 1, rank: 1, wid: 1}
+      },
       {
         $group: {
           _id: '$parent',
-          // title: { $first: '$title' }
+          title: { $first: '$par.title' },
+          rank: { $first: '$par.rank' },
+          iteration: { $first: '$par.iteration'},
+          wid: { $first: '$par.wid'},
+          data: { $addToSet: { _id: '$_id', title: '$title', wid: '$wid', rank: '$rank' } }
+
         }
       },
+     
       {
-        $count: 'total'
-      }
+        $unwind: '$data'
+      },
+      {
+        $sort: { 'data.rank': 1, 'data.wid': 1 }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          title: { $first: '$title' },
+          rank: { $first: '$rank' },
+          iteration: { $first: '$iteration'},
+          wid: { $first: '$wid'},
+          data: { $push: { _id: '$data._id', title: '$data.title' } }
+
+        },
+      },
+      {
+        $sort: { 'iteration': 1, 'rank': 1, 'wid': 1 }
+      },
+      {
+        $project: {
+          _id: 1,
+          iteration: 1,
+          title: 1,
+          'data': 1
+        }
+      },
     ])
     ctx.body = data
   }
