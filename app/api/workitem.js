@@ -56,7 +56,7 @@ export default class WorkItemRest extends RestGen {
       const data = await WorkItem.aggregate([
         {
           $match: {
-            project: id,
+            project,
             type: { $in: ['Task', 'Bug'] },
             state: 'Closed',
             isAccepted: { $ne: true }
@@ -101,19 +101,20 @@ export default class WorkItemRest extends RestGen {
             title: { $first: '$title' },
             rank: { $first: '$rank' },
             iteration: { $first: '$iteration'},
-            wid: { $first: '$wid'},
-            data: { $push: { _id: '$data._id', title: '$data.title' } }
+            key: { $first: '$wid'},
+            data: { $push: { _id: '$data._id', key: '$data.wid', title: '$data.title' } }
   
           },
         },
         {
-          $sort: { 'iteration': 1, 'rank': 1, 'wid': 1 }
+          $sort: { 'iteration': 1, 'rank': 1, 'key': 1 }
         },
         {
           $project: {
             _id: 1,
             iteration: 1,
             title: 1,
+            key: 1,
             'data': 1
           }
         },
