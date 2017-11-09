@@ -32,14 +32,31 @@ export default class ProjectRest extends RestGen {
       projects = JSON.parse(JSON.stringify(projects))
       for (let i = 0; i < projects.length; i++) {
         let project = projects[i]
-        const ccount = await WorkItem.count({ project: project.tfs_id, state: 'Closed', type: 'User Story', isAccepted: false })
-        project.taskClosed = ccount
+        const ccount = await WorkItem.aggregate([
+          {
+            $match: {
+              project: project.tfs_id,
+              type: { $ne: 'User Story' },
+              state: 'Closed',
+              isAccepted: { $ne: true }
+            }
+          },
+          {
+            $group: {
+              _id: '$parent'
+            }
+          },
+          {
+            $count: 'total'
+          }
+        ])
+        project.taskClosed = ccount[0].total
         const activeIterations = project.iterations.filter(i => i.status === 'plan').map(i => i.name)
         for (let j = 0; j < project.members.length; j++) {
           const member = project.members[j]
-          const mcount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'New', iteration: { '$in': activeIterations } })
-          const macount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Active', iteration: { '$in': activeIterations } })
-          const mccount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Closed', iteration: { '$in': activeIterations } })
+          const mcount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'New', type: { $ne: 'User Story' }, iteration: { '$in': activeIterations } })
+          const macount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Active', type: { $ne: 'User Story' }, iteration: { '$in': activeIterations } })
+          const mccount = await WorkItem.count({ project: project.tfs_id, assignedTo: `${member.displayName} <${member.uniqueName}>`, state: 'Closed', type: { $ne: 'User Story' }, iteration: { '$in': activeIterations } })
           member.taskCount = mcount
           member.taskActive = macount
           member.taskClosed = mccount

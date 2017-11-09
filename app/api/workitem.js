@@ -53,10 +53,35 @@ export default class WorkItemRest extends RestGen {
       const project = ctx.request.body.project
       const state = ctx.request.body.state
       const isAccepted = ctx.request.body.isAccepted
-      const data = await WorkItem.find({ project, type: 'User Story', state, isAccepted })
-        .select({ title: 1, iteration: 1, closedDate: 1, activatedDate: 1  })
-        .sort({ iteration: 1 })
-        .exec()
+      const data = await WorkItem.aggregate([
+        {
+          $match: {
+            project,
+            type: { $in: ['Task', 'Bug'] },
+            state: 'Closed',
+            isAccepted: { $ne: true }
+          }
+
+        },
+        {
+          $project: {
+            parent: 1,
+            title: 1,
+            iteration: 1
+          }
+        },
+        {
+          $group: {
+            _id: '$parent',
+            data: { $addToSet: { key: '$_id', title: '$title' } }
+          }
+        },
+        {
+          $sort: {
+            iteration: 1
+          }
+        }
+      ])
       ctx.body = { success: true, data }
     } catch (error) {
       ctx.body = { success: false, error: error.message }
@@ -154,5 +179,48 @@ export default class WorkItemRest extends RestGen {
     } catch (error) {
       ctx.body = { success: false, error: error.message }
     }
+  }
+
+  @route('get', 'test/:id') 
+  async test (ctx) {
+    const id = ctx.params.id
+    // const data = await WorkItem.find().populate({ path: 'tasks', match: { isAccepted : true }}).exec()
+    // const nData = data.filter(w => w.tasks.length)
+
+    const data = await WorkItem.aggregate([
+      {
+        $match: {
+          project: id,
+          type: { $in: ['Task', 'Bug'] },
+          state: 'Closed',
+          isAccepted: { $ne: true }
+        }
+        
+      },
+      {
+        $lookup: {
+          from: 'workitems',
+          localField: 'parent',
+          foreignField: '_id',
+          asObject: ''
+        }
+      },
+      // {
+      //   $project: {
+      //     parent: 1,
+      //     title: 1
+      //   }
+      // },
+      {
+        $group: {
+          _id: '$parent',
+          // title: { $first: '$title' }
+        }
+      },
+      {
+        $count: 'total'
+      }
+    ])
+    ctx.body = data
   }
 }
