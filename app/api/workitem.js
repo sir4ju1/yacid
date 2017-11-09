@@ -219,18 +219,40 @@ export default class WorkItemRest extends RestGen {
         $match: {
           project: project,
           state: 'Closed',
+          type: { $ne: 'User Story' },
           isAccepted: true
         }
       },
       {
         $project: {
           accepted: { $dateToString: { format: "%d-%m-%Y", date: "$acceptedDate" } },
-          title: 1, closedDate: 1, tasks: 1
+          title: 1, closedDate: 1, parent: 1
         }
       },
       {
         $match: {
           accepted: date
+        }
+      },
+      {
+        $lookup:{
+          from: 'workitems',
+          localField: 'parent',
+          foreignField: '_id',
+          as: 'par'
+        }
+      },
+      {
+        $unwind: '$par'
+      },
+      {
+        $group: {
+          _id: '$parent',
+          key: { $first: '$par.wid' },
+          title: { $first: '$par.title' },
+          iteration: { $first: '$par.iteration'},
+          data: { $addToSet: { key: '$_id', title: '$title' } }
+
         }
       }
     ])
@@ -247,6 +269,9 @@ export default class WorkItemRest extends RestGen {
     try {
       const id = ctx.request.body.id
       const body = ctx.request.body
+      if (body.isAccepted) {
+        body.acceptedDate = new Date()
+      }
       const data = await WorkItem.update({ _id: id }, body)
       ctx.body = { success: true, data }
     } catch (error) {
