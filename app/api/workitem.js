@@ -206,6 +206,11 @@ export default class WorkItemRest extends RestGen {
           _id: '$accepted',
           count: { $sum: 1 }
         }
+      },
+      {
+        $sort: {
+          _id: 1
+        }
       }
     ])
     ctx.body = { success: true, data }
