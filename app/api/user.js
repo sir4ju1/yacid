@@ -4,9 +4,10 @@ class UserRest extends RestGen {
   constructor () {
     super('user', User)
   }
-  @route('get', 'notify')
+  @route('post', 'notify')
   async notify (ctx) {
-    global.WorkItem.send('socket', 'send test')
+    const body = ctx.request.body
+    global.WorkItem.send('socket', body)
     ctx.body = 'test ws'
   }
   @route('post', 'login')
