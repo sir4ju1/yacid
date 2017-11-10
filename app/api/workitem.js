@@ -43,7 +43,7 @@ export default class WorkItemRest extends RestGen {
             rank: { $first: '$par.rank' },
             iteration: { $first: '$par.iteration'},
             wid: { $first: '$par.wid'},
-            data: { $addToSet: { _id: '$_id', state: '$state', title: '$title', description: '$description', wid: '$wid', rank: '$rank' } }
+            data: { $addToSet: { _id: '$_id', state: '$state', type: '$type', title: '$title', description: '$description', wid: '$wid', rank: '$rank' } }
   
           }
         },       
@@ -60,7 +60,7 @@ export default class WorkItemRest extends RestGen {
             rank: { $first: '$rank' },
             iteration: { $first: '$iteration'},
             key: { $first: '$wid'},
-            data: { $push: { _id: '$data._id', key: '$data.wid', title: '$data.title', description: '$data.description', state: '$data.state' } }
+            data: { $push: { _id: '$data._id', key: '$data.wid', title: '$data.title', description: '$data.description', state: '$data.state', type: '$data.type' } }
   
           },
         },
@@ -119,7 +119,7 @@ export default class WorkItemRest extends RestGen {
             rank: { $first: '$par.rank' },
             iteration: { $first: '$par.iteration'},
             wid: { $first: '$par.wid'},
-            data: { $addToSet: { _id: '$_id', title: '$title', wid: '$wid', rank: '$rank' } }
+            data: { $addToSet: { _id: '$_id', title: '$title', type: '$type', wid: '$wid', rank: '$rank' } }
   
           }
         },
@@ -137,7 +137,7 @@ export default class WorkItemRest extends RestGen {
             rank: { $first: '$rank' },
             iteration: { $first: '$iteration'},
             key: { $first: '$wid'},
-            data: { $push: { _id: '$data._id', key: '$data.wid', title: '$data.title' } }
+            data: { $push: { _id: '$data._id', key: '$data.wid', title: '$data.title', type: '$data.type' } }
   
           },
         },
@@ -226,7 +226,7 @@ export default class WorkItemRest extends RestGen {
       {
         $project: {
           accepted: { $dateToString: { format: "%d-%m-%Y", date: "$acceptedDate" } },
-          title: 1, closedDate: 1, parent: 1
+          title: 1, closedDate: 1, parent: 1, type: 1
         }
       },
       {
@@ -251,7 +251,7 @@ export default class WorkItemRest extends RestGen {
           key: { $first: '$par.wid' },
           title: { $first: '$par.title' },
           iteration: { $first: '$par.iteration'},
-          data: { $addToSet: { key: '$_id', title: '$title' } }
+          data: { $addToSet: { key: '$_id', title: '$title', type: '$type' } }
 
         }
       }
