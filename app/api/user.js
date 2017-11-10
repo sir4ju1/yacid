@@ -6,7 +6,7 @@ class UserRest extends RestGen {
   }
   @route('get', 'notify')
   async notify (ctx) {
-    global.WsWorkItem.send('socket', 'send test')
+    global.WorkItem.send('socket', 'send test')
     ctx.body = 'test ws'
   }
   @route('post', 'login')
