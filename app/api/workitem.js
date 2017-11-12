@@ -92,16 +92,19 @@ export default class WorkItemRest extends RestGen {
         {
           $match: {
             project,
-            type: { $in: ['Task', 'Bug'] },
-            state: 'Closed',
+            type: 'User Story',
+            state: { $ne: 'Closed' },
             isAccepted: { $ne: true }
           }
           
         },
         {
+          $unwind: '$tasks'
+        },
+        {
           $lookup: {
             from: 'workitems',
-            localField: 'parent',
+            localField: 'tasks',
             foreignField: '_id',
             as: 'par'
           }
@@ -109,21 +112,18 @@ export default class WorkItemRest extends RestGen {
         {
           $unwind: '$par'
         },
-        {
-          $sort: { iteration: 1, rank: 1, wid: 1}
-        },
+        
         {
           $group: {
-            _id: '$parent',
-            title: { $first: '$par.title' },
-            rank: { $first: '$par.rank' },
-            iteration: { $first: '$par.iteration'},
-            wid: { $first: '$par.wid'},
-            data: { $addToSet: { _id: '$_id', title: '$title', type: '$type', wid: '$wid', rank: '$rank' } }
+            _id: '$_id',
+            title: { $first: '$title' },
+            rank: { $first: '$rank' },
+            iteration: { $first: '$iteration'},
+            wid: { $first: '$wid'},
+            data: { $addToSet: { _id: '$par._id', title: '$par.title', type: '$par.type', wid: '$par.wid', rank: '$par.rank' } }
   
           }
         },
-       
         {
           $unwind: '$data'
         },
@@ -152,7 +152,7 @@ export default class WorkItemRest extends RestGen {
             key: 1,
             'data': 1
           }
-        },
+        }
       ])
       ctx.body = { success: true, data }
     } catch (error) {
@@ -278,6 +278,7 @@ export default class WorkItemRest extends RestGen {
         body.acceptedDate = new Date()
       }
       const data = await WorkItem.update({ _id: id }, body)
+      global.WorkItem.send('socket', JSON.stringify({ type: 'wit', date: new Date() }))
       ctx.body = { success: true, data }
     } catch (error) {
       ctx.body = { success: false, error: error.message }

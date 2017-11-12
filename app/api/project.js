@@ -36,8 +36,8 @@ export default class ProjectRest extends RestGen {
           {
             $match: {
               project: project.tfs_id,
-              type: { $ne: 'User Story' },
-              state: 'Closed',
+              type: 'User Story',
+              state: { $ne: 'Closed' },
               isAccepted: { $ne: true }
             }
           },
