@@ -23,9 +23,7 @@ const func = {}
 
 func.getAllProjects = async () => {
   const core = webApi.getCoreApi()
-  const projects = await core.getProjects()
-  const wit = webApi.getWorkApi()
-  const gitApi = webApi.getGitApi()
+  const projects = (await rest.get('_apis/projects?api-version=1.0')).data
   
   let options = { upsert: true, new: true, setDefaultsOnInsert: true }
   for (let i = 0; i < projects.length; i++) {
