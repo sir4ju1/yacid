@@ -16,9 +16,6 @@ const rest = axios.create({
 })
 const serverUrl = `https://${process.env.TFSNAME}.visualstudio.com/DefaultCollection`
 
-const authHandler = vsts.getPersonalAccessTokenHandler(process.env.ACCESSTOKEN)
-const webApi = new vsts.WebApi(serverUrl, authHandler)
-
 const func = {}
 
 func.getAllProjects = async () => {
