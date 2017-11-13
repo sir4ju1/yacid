@@ -92,19 +92,16 @@ export default class WorkItemRest extends RestGen {
         {
           $match: {
             project,
-            type: 'User Story',
-            state: { $ne: 'Closed' },
+            type: { $ne: 'User Story' },
+            state: 'Closed',
             isAccepted: { $ne: true }
           }
           
         },
         {
-          $unwind: '$tasks'
-        },
-        {
           $lookup: {
             from: 'workitems',
-            localField: 'tasks',
+            localField: 'parent',
             foreignField: '_id',
             as: 'par'
           }
@@ -112,18 +109,21 @@ export default class WorkItemRest extends RestGen {
         {
           $unwind: '$par'
         },
-        
+        {
+          $sort: { iteration: 1, rank: 1, wid: 1}
+        },
         {
           $group: {
-            _id: '$_id',
-            title: { $first: '$title' },
-            rank: { $first: '$rank' },
-            iteration: { $first: '$iteration'},
-            wid: { $first: '$wid'},
-            data: { $addToSet: { _id: '$par._id', title: '$par.title', type: '$par.type', wid: '$par.wid', rank: '$par.rank' } }
+            _id: '$parent',
+            title: { $first: '$par.title' },
+            rank: { $first: '$par.rank' },
+            iteration: { $first: '$par.iteration'},
+            wid: { $first: '$par.wid'},
+            data: { $addToSet: { _id: '$_id', title: '$title', type: '$type', wid: '$wid', rank: '$rank' } }
   
           }
         },
+       
         {
           $unwind: '$data'
         },
@@ -152,8 +152,9 @@ export default class WorkItemRest extends RestGen {
             key: 1,
             'data': 1
           }
-        }
+        },
       ])
+
       ctx.body = { success: true, data }
     } catch (error) {
       ctx.body = { success: false, error: error.message }
