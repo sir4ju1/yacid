@@ -6,7 +6,13 @@ import Team from 'model/team'
 import WorkItem from 'model/workitem'
 import { config } from 'dotenv'
 config()
+import axios from 'axios'
+const rest = axios.create({
+  baseURL: `https://${process.env.TFSNAME}.visualstudio.com/DefaultCollection`,
+  timeout: 1000,
+  headers: {'Authorization': `Bearer `}
 
+})
 const serverUrl = `https://${process.env.TFSNAME}.visualstudio.com/DefaultCollection`
 
 const authHandler = vsts.getPersonalAccessTokenHandler(process.env.ACCESSTOKEN)
@@ -162,6 +168,25 @@ func.changeWorkItem = async (body) => {
     }], workitem.wid)
   workitem.state = update['fields']['System.State']
   await workitem.save()
+}
+
+func.createSubscription = async (project) => {
+  const service = webApi.getServiceHooksApi()
+  const result = await service.createSubscription({
+    "publisherId": "tfs",
+    "eventType": "workitem.created",
+    "consumerId": "webHooks",
+    "consumerActionId": "httpRequest",
+    "publisherInputs": {
+      "areaPath": "",
+      "workItemType": "",
+      "projectId": `${project}`
+    },
+    "consumerInputs": {
+      "url": `https://ci.lolobyte.com/api/vsts/${project}/notification`    }
+  })
+  // const result = await service.getSubscription('06dbb646-49b3-4bbb-9ccd-7c8be62a943f')
+  return result
 }
 
 export default func

@@ -48,10 +48,23 @@ class VstsRest extends RestGen {
   }
   @route('post', ':project/notification')
   async witNotification (ctx) {
-    const project = ctx.params.project
-    await Vsts.getWorkitem(project)
-    global.WorkItem.send('socket', JSON.stringify({ type: 'wit', date: new Date() }))
-    ctx.body = { success: true }
+    try {
+      const project = ctx.params.project
+      await Vsts.getWorkitem(project)
+      global.WorkItem.send('socket', JSON.stringify({ type: 'wit', date: new Date() }))
+      ctx.body = { success: true }
+    } catch (error) {
+      ctx.body = { success: false, error: error.message }
+    }
+  }
+  @route('get', ':project/tests')
+  async test (ctx) {
+    try {
+      const data = await Vsts.createSubscription(ctx.params.project)
+      ctx.body = { success: true, data}
+    } catch (error) {
+      ctx.body = { success: false, error: error.message }
+    }
   }
 }
 
