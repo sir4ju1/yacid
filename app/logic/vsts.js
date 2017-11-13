@@ -11,7 +11,7 @@ import axios from 'axios'
 const encodedToken = base.btoa(`:${process.env.ACCESSTOKEN}`)
 const rest = axios.create({
   baseURL: `https://${process.env.TFSNAME}.visualstudio.com/DefaultCollection`,
-  timeout: 3000,
+  timeout: 5000,
   headers: {'Authorization': `Basic ${encodedToken}`}
 })
 const serverUrl = `https://${process.env.TFSNAME}.visualstudio.com/DefaultCollection`
@@ -38,11 +38,7 @@ func.getAllProjects = async () => {
   return projects
 }
 func.getProject = async (id) => {
-  const core = webApi.getCoreApi()
-  const p = await core.getProject(id)
-  const wit = webApi.getWorkApi()
-  const gitApi = webApi.getGitApi()
-  
+  const p = (await rest.get(`_apis/projects/${id}?api-version=1.0`)).data
   let options = { upsert: true, new: true, setDefaultsOnInsert: true }
   const project = await Project.findOneAndUpdate({ tfs_id: p.id }, {
     tfs_id: p.id,
@@ -54,7 +50,7 @@ func.getProject = async (id) => {
     members: []
   }, options)
   if (project.status === 'active') {
-    const its = await wit.getTeamIterations({ projectId: p.id })
+    const its = (await rest.get(`${id}/_apis/work/teamsettings/iterations?api-version=v2.0-preview`)).data.value
     for (let j = 0; j < its.length; j++) {
       const it = its[j]
       const iter = await Iteration.findOneAndUpdate({ iid: it.id }, {
@@ -65,7 +61,7 @@ func.getProject = async (id) => {
       }, options)
       project.iterations.push(iter._id)
     }
-    const prepos = await gitApi.getRepositories(p.id)
+    const prepos = (await rest.get(`${id}/_apis/git/repositories?api-version=1.0`)).data.value
     for (let j = 0; j < prepos.length; j++) {
       const rep = prepos[j]
       const re = await Repo.findOneAndUpdate({ rid: rep.id }, {
@@ -74,8 +70,8 @@ func.getProject = async (id) => {
       }, options)
       project.repos.push(re._id)
     }
-    const teams = await core.getTeams(p.id)
-    const members = await core.getTeamMembers(p.id, teams[0].id)
+    const teams = (await rest.get(`_apis/projects/${id}/teams?api-version=2.2`)).data.value
+    const members = (await rest.get(`_apis/projects/${id}/teams/${teams[0].id}/members?api-version=2.2`)).data.value
     for (let j = 0; j < members.length; j++) {
       const t = members[j]
       const member = await Team.findOneAndUpdate({ tid: t.id }, {
