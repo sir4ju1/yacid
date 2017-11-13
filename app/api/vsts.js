@@ -57,11 +57,20 @@ class VstsRest extends RestGen {
       ctx.body = { success: false, error: error.message }
     }
   }
+  @route('get', ':project/hook')
+  async serviceHook (ctx) {
+    try {
+      const data = await Vsts.createSubscription(ctx.params.project)
+      ctx.body = { success: data }
+    } catch (error) {
+      ctx.body = { success: false, error: error.message }
+    }
+  }
   @route('get', ':project/tests')
   async test (ctx) {
     try {
-      const data = await Vsts.createSubscription(ctx.params.project)
-      ctx.body = { success: true, data}
+      
+      ctx.body = { success: true }
     } catch (error) {
       ctx.body = { success: false, error: error.message }
     }

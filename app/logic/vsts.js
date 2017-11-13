@@ -4,14 +4,15 @@ import Repo from 'model/repo'
 import Iteration from 'model/iteration'
 import Team from 'model/team'
 import WorkItem from 'model/workitem'
+import base from 'helper/base'
 import { config } from 'dotenv'
 config()
 import axios from 'axios'
+const encodedToken = base.btoa(`:${process.env.ACCESSTOKEN}`)
 const rest = axios.create({
   baseURL: `https://${process.env.TFSNAME}.visualstudio.com/DefaultCollection`,
-  timeout: 1000,
-  headers: {'Authorization': `Bearer `}
-
+  timeout: 3000,
+  headers: {'Authorization': `Basic ${encodedToken}`}
 })
 const serverUrl = `https://${process.env.TFSNAME}.visualstudio.com/DefaultCollection`
 
@@ -157,7 +158,7 @@ func.getWorkitem = async (project) => {
   return wits
 }
 
-func.changeWorkItem = async (body) => {
+func.changeStatus = async (body) => {
   const workitem = await WorkItem.findOne({ _id: body.id })
   const wit = webApi.getWorkItemTrackingApi()
   const update = await wit.updateWorkItem({ },
@@ -171,22 +172,38 @@ func.changeWorkItem = async (body) => {
 }
 
 func.createSubscription = async (project) => {
-  const service = webApi.getServiceHooksApi()
-  const result = await service.createSubscription({
-    "publisherId": "tfs",
-    "eventType": "workitem.created",
-    "consumerId": "webHooks",
-    "consumerActionId": "httpRequest",
-    "publisherInputs": {
-      "areaPath": "",
-      "workItemType": "",
-      "projectId": `${project}`
-    },
-    "consumerInputs": {
-      "url": `https://ci.lolobyte.com/api/vsts/${project}/notification`    }
-  })
-  // const result = await service.getSubscription('06dbb646-49b3-4bbb-9ccd-7c8be62a943f')
-  return result
+  try {
+    await rest.post('_apis/hooks/subscriptions/?api-version=1.0', {
+      "publisherId": "tfs",
+      "eventType": "workitem.created",
+      "consumerId": "webHooks",
+      "consumerActionId": "httpRequest",
+      "publisherInputs": {
+        "areaPath": "",
+        "workItemType": "",
+        "projectId": `${project}`
+      },
+      "consumerInputs": {
+        "url": `https://ci.lolobyte.com/api/vsts/${project}/notification`    }
+    })
+    await rest.post('_apis/hooks/subscriptions/?api-version=1.0', {
+      "publisherId": "tfs",
+      "eventType": "workitem.updated",
+      "consumerId": "webHooks",
+      "consumerActionId": "httpRequest",
+      "publisherInputs": {
+        "areaPath": "",
+        "workItemType": "",
+        "projectId": `${project}`
+      },
+      "consumerInputs": {
+        "url": `https://ci.lolobyte.com/api/vsts/${project}/notification`    }
+    })
+    return true
+  } catch (error) {
+    return false
+  }
 }
 
 export default func
+ 

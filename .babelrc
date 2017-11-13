@@ -15,7 +15,8 @@
         "alias": {
           "~": "./",
           "helper": "./app/helpers",
-          "model": "./app/models"
+          "model": "./app/models",
+          "logic": "./app/logic"
         }
       }
     ]
