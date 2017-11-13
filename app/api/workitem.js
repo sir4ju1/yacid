@@ -209,7 +209,7 @@ export default class WorkItemRest extends RestGen {
       },
       {
         $sort: {
-          _id: 1
+          _id: -1
         }
       }
     ])
