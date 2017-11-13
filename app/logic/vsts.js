@@ -86,8 +86,7 @@ func.getProject = async (id) => {
 }
 
 func.getWorkitem = async (project) => {
-  const wit = webApi.getWorkItemTrackingApi()
-  const wits = await wit.queryByWiql({ query: `Select [System.Id] From WorkItemLinks WHERE (Source.[System.TeamProject] = @project and Source.[System.State] <> 'Removed') and ([System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward') and (Target.[System.WorkItemType] <> '') mode(Recursive)` }, { projectId: project })
+  const wits = (await rest.post(`${project}/_apis/wit/wiql?api-version=1.0`, { query: `Select [System.Id] From WorkItemLinks WHERE (Source.[System.TeamProject] = @project and Source.[System.State] <> 'Removed') and ([System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward') and (Target.[System.WorkItemType] <> '') mode(Recursive)` })).data
   let data = new Map()
   let ids = new Map()
   wits.workItemRelations.forEach(d => {
@@ -98,7 +97,8 @@ func.getWorkitem = async (project) => {
     }
     ids.set(d.target.id, {})
   })
-  var workItems = await wit.getWorkItems([...ids.keys()])
+  const strIds = [...ids.keys()].join(',')
+  var workItems = (await rest.get(`_apis/wit/workitems?ids=${strIds}&api-version=1.0`)).data.value
   workItems.forEach(w => {
     ids.set(w.id, w)
   })
@@ -125,7 +125,6 @@ func.getWorkitem = async (project) => {
     let wdb = await WorkItem.findOneAndUpdate({ project, wid: sid.id }, w, options)
     let tasks = []
     for (let sub of d) {
-      console.log('sub', sub)
       const tid = ids.get(sub)
       const subdb = await WorkItem.findOneAndUpdate({ project, wid: tid.id }, {
         project,
@@ -154,13 +153,17 @@ func.getWorkitem = async (project) => {
 
 func.changeStatus = async (body) => {
   const workitem = await WorkItem.findOne({ _id: body.id })
-  const wit = webApi.getWorkItemTrackingApi()
-  const update = await wit.updateWorkItem({ },
-    [{
-      op: 'replace',
-      path: '/fields/System.State',
-      value: body.state
-    }], workitem.wid)
+  const update = (await rest.patch(`_apis/wit/workitems/${workitem.wid}?api-version=1.0`,
+  [{
+    op: 'replace',
+    path: '/fields/System.State',
+    value: body.state
+  }], {
+    headers: {
+      'Content-Type': 'application/json-patch+json',
+      'Authorization': `Basic ${encodedToken}`
+    }
+  })).data
   workitem.state = update['fields']['System.State']
   await workitem.save()
 }
