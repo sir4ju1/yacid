@@ -69,8 +69,8 @@ class VstsRest extends RestGen {
   @route('get', ':project/tests')
   async test (ctx) {
     try {
-      
-      ctx.body = { success: true }
+      const wits = []
+      ctx.body = { success: true, data: wits }
     } catch (error) {
       ctx.body = { success: false, error: error.message }
     }

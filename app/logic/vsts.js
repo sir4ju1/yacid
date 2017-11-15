@@ -8,6 +8,7 @@ import base from 'helper/base'
 import { config } from 'dotenv'
 config()
 import axios from 'axios'
+import moment from 'moment'
 const encodedToken = base.btoa(`:${process.env.ACCESSTOKEN}`)
 const rest = axios.create({
   baseURL: `https://${process.env.TFSNAME}.visualstudio.com/DefaultCollection`,
@@ -83,7 +84,23 @@ func.getProject = async (id) => {
 }
 
 func.getWorkitem = async (project) => {
-  const wits = (await rest.post(`${project}/_apis/wit/wiql?api-version=1.0`, { query: `Select [System.Id] From WorkItemLinks WHERE (Source.[System.TeamProject] = @project and Source.[System.State] <> 'Removed') and ([System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward') and (Target.[System.WorkItemType] <> '') mode(Recursive)` })).data
+  const wit = await WorkItem.aggregate([
+    {
+      $match: {
+        project,
+        type: 'User Story'
+      }
+    },
+    {
+      $group: {
+        _id: '$type',
+        max: { $max: '$createdDate' }
+      }
+    }
+   ])
+  const maxDate = wit.length ? `and (Source.[System.CreatedDate] >= '${moment.utc(wit[0].max).format('MM/DD/YY')}')` : ''
+  const wits = (await rest.post(`${project}/_apis/wit/wiql?api-version=1.0`, { query: `Select [System.Id] From WorkItemLinks WHERE ((Source.[System.TeamProject] = @project and Source.[System.State] <> 'Removed') ${maxDate} and ([System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward') and (Target.[System.WorkItemType] <> '')) mode(Recursive)` })).data
+  return wits
   let data = new Map()
   let ids = new Map()
   wits.workItemRelations.forEach(d => {
