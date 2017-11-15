@@ -168,7 +168,7 @@ export default class WorkItemRest extends RestGen {
       const data = await WorkItem.find({ project, iteration, type: 'User Story' })
         .select({ title: 1, iteration: 1, type: 1, state: 1, closedDate: 1, activatedDate: 1, tasks: 1 })
         .sort({ iteration: 1 })
-        .populate({ path: 'tasks', select: { title: 1, iteration: 1, type: 1, state: 1, closedDate: 1, activatedDate: 1 } })
+        .populate({ path: 'tasks', select: { title: 1, iteration: 1, type: 1, state: 1, isOpt: 1, closedDate: 1, activatedDate: 1 } })
         .exec()
       let wits = JSON.parse(JSON.stringify(data))
       wits.forEach(w => {
@@ -232,7 +232,7 @@ export default class WorkItemRest extends RestGen {
       {
         $project: {
           accepted: { $dateToString: { format: "%d-%m-%Y", date: "$acceptedDate" } },
-          title: 1, closedDate: 1, parent: 1, type: 1
+          title: 1, closedDate: 1, parent: 1, type: 1, isOpt: 1
         }
       },
       {
@@ -257,18 +257,23 @@ export default class WorkItemRest extends RestGen {
           key: { $first: '$par.wid' },
           title: { $first: '$par.title' },
           iteration: { $first: '$par.iteration'},
-          data: { $addToSet: { key: '$_id', title: '$title', type: '$type' } }
+          data: { $addToSet: { key: '$_id', title: '$title', type: '$type', isOpt: '$isOpt' } }
 
+        }
+      },
+      {
+        $sort: {
+          iteration: 1, key: 1
         }
       }
     ])
-    const data = await WorkItem
-      .populate(wits, {
-        path: 'tasks',
-        select: { title: 1, closedDate: 1 },
-        match: { state: 'Closed', isAccepted: true }
-      })
-    ctx.body = { success: true, data }
+    // const data = await WorkItem
+    //   .populate(wits, {
+    //     path: 'tasks',
+    //     select: { title: 1, closedDate: 1 },
+    //     match: { state: 'Closed', isAccepted: true }
+    //   })
+    ctx.body = { success: true, data: wits }
   }
 
   async update (ctx) {
