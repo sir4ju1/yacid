@@ -119,7 +119,7 @@ export default class WorkItemRest extends RestGen {
             rank: { $first: '$par.rank' },
             iteration: { $first: '$par.iteration'},
             wid: { $first: '$par.wid'},
-            data: { $addToSet: { _id: '$_id', title: '$title', type: '$type', wid: '$wid', rank: '$rank' } }
+            data: { $addToSet: { _id: '$_id', title: '$title', type: '$type', wid: '$wid', rank: '$rank', isOpt: '$isOpt' } }
   
           }
         },
@@ -137,7 +137,7 @@ export default class WorkItemRest extends RestGen {
             rank: { $first: '$rank' },
             iteration: { $first: '$iteration'},
             key: { $first: '$wid'},
-            data: { $push: { _id: '$data._id', key: '$data.wid', title: '$data.title', type: '$data.type' } }
+            data: { $push: { _id: '$data._id', key: '$data.wid', title: '$data.title', type: '$data.type', isOpt: '$data.isOpt' } }
   
           },
         },
