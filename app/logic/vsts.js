@@ -195,7 +195,7 @@ func.createSubscription = async (project) => {
         "projectId": `${project}`
       },
       "consumerInputs": {
-        "url": `https://ci.lolobyte.com/api/vsts/${project}/notification`    }
+        "url": `http://ci.lolobyte.com/api/vsts/${project}/notification`    }
     })
     await rest.post('_apis/hooks/subscriptions/?api-version=1.0', {
       "publisherId": "tfs",
@@ -208,7 +208,7 @@ func.createSubscription = async (project) => {
         "projectId": `${project}`
       },
       "consumerInputs": {
-        "url": `https://ci.lolobyte.com/api/vsts/${project}/notification`    }
+        "url": `http://ci.lolobyte.com/api/vsts/${project}/notification`    }
     })
     return true
   } catch (error) {
