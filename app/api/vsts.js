@@ -1,5 +1,6 @@
 import { RestGen, route, auth } from 'microback'
 import Vsts from 'logic/vsts'
+import { VsoClient } from 'vso-node-api/VsoClient';
 
 
 class VstsRest extends RestGen {
@@ -50,6 +51,18 @@ class VstsRest extends RestGen {
   async witNotification (ctx) {
     try {
       const project = ctx.params.project
+      const body = ctx.request.body
+      switch(body.eventType) {
+        case 'workitem.created':
+          await Vsts.inserWit(body.resource)
+        break
+        case 'workitem.updated':
+          await Vsts.inserWit(body.resource.revision)
+        break
+        default:
+          await Vsts.getWorkitem(project)
+        break
+      }
       await Vsts.getWorkitem(project)
       global.WorkItem.send('socket', JSON.stringify({ type: 'wit', date: new Date() }))
       ctx.body = { success: true }
@@ -69,7 +82,7 @@ class VstsRest extends RestGen {
   @route('get', ':project/tests')
   async test (ctx) {
     try {
-      const wits = []
+      const wits = await Vsts.test(ctx.params.project)
       ctx.body = { success: true, data: wits }
     } catch (error) {
       ctx.body = { success: false, error: error.message }

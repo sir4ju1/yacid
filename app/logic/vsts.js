@@ -83,24 +83,26 @@ func.getProject = async (id) => {
   }
 }
 
-func.getWorkitem = async (project) => {
-  const wit = await WorkItem.aggregate([
-    {
-      $match: {
-        project,
-        type: 'User Story'
+func.getWorkitem = async (project, all = true) => {
+  var wit = {}
+  if (!all) {
+    wit = await WorkItem.aggregate([
+      {
+        $match: {
+          project,
+          type: 'User Story'
+        }
+      },
+      {
+        $group: {
+          _id: '$type',
+          max: { $max: '$createdDate' }
+        }
       }
-    },
-    {
-      $group: {
-        _id: '$type',
-        max: { $max: '$createdDate' }
-      }
-    }
-   ])
+     ])
+  }
   const maxDate = wit.length ? `and (Source.[System.CreatedDate] >= '${moment.utc(wit[0].max).format('MM/DD/YY')}')` : ''
   const wits = (await rest.post(`${project}/_apis/wit/wiql?api-version=1.0`, { query: `Select [System.Id] From WorkItemLinks WHERE ((Source.[System.TeamProject] = @project and Source.[System.State] <> 'Removed') ${maxDate} and ([System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward') and (Target.[System.WorkItemType] <> '')) mode(Recursive)` })).data
-  return wits
   let data = new Map()
   let ids = new Map()
   wits.workItemRelations.forEach(d => {
@@ -214,6 +216,76 @@ func.createSubscription = async (project) => {
   } catch (error) {
     return false
   }
+}
+
+func.insertWit = async (project, wit) => {
+  const wdb = await WorkItem.create({
+    project,
+    wid: wit.id,
+    type: wit['fields']['System.WorkItemType'],
+    iteration: wit['fields']['System.IterationPath'].split('\\').reverse()[0],
+    title: wit['fields']['System.Title'],
+    description: wit['fields']['System.Description'],
+    createdBy: wit['fields']['System.CreatedBy'],
+    createdDate: wit['fields']['System.CreatedDate'],
+    assignedTo: wit['fields']['System.AssignedTo'],
+    state: wit['fields']['System.State'],
+    activatedBy: wit['fields']['Microsoft.VSTS.Common.ActivatedBy'],
+    activatedDate: wit['fields']['Microsoft.VSTS.Common.ActivatedDate'],
+    closedBy: wit['fields']['Microsoft.VSTS.Common.ClosedBy'],
+    closedDate: wit['fields']['Microsoft.VSTS.Common.ClosedDate'],
+    rank: wit['fields']['Microsoft.VSTS.Common.StackRank'] ? wit['fields']['Microsoft.VSTS.Common.StackRank'] : 100000000000,
+    tasks: wit['fields']['System.WorkItemType'] === 'User Story' ? [] : undefined
+  })
+  if (wdb.type !== 'User Story') {
+    const wits = (await rest.post(`${project}/_apis/wit/wiql?api-version=1.0`, { query: `Select [System.Id] From WorkItemLinks WHERE ((Source.[System.TeamProject] = @project and Source.[System.IterationPath] = '${wit['fields']['System.IterationPath']}' and Source.[System.State] <> 'Removed') ${maxDate} and ([System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward') and (Target.[System.WorkItemType] <> '')) mode(Recursive)` })).data
+        
+    for(var i = 0; i < wits.workItemRelations.length; i++) {
+      const d = wits.workItemRelations[i]
+      if (d.rel && d.rel === 'System.LinkTypes.Hierarchy-Forward') {
+        if (d.target.id === wdb.wid) {
+          const parent = await WorktItem.findOne({ wid: d.source.id }).exec()
+          wdb.parent = parent
+          parent.tasks.push(wdb)
+          await wdb.save()
+          await parent.save()
+          break
+        }
+      } 
+    }
+  }
+}
+
+func.updateWit = async (project, wit) => {
+  await WorkItem.update({ project, wid: wit.id }, {
+    type: wit['fields']['System.WorkItemType'],
+    iteration: wit['fields']['System.IterationPath'].split('\\').reverse()[0],
+    title: wit['fields']['System.Title'],
+    description: wit['fields']['System.Description'],
+    createdBy: wit['fields']['System.CreatedBy'],
+    createdDate: wit['fields']['System.CreatedDate'],
+    assignedTo: wit['fields']['System.AssignedTo'],
+    state: wit['fields']['System.State'],
+    activatedBy: wit['fields']['Microsoft.VSTS.Common.ActivatedBy'],
+    activatedDate: wit['fields']['Microsoft.VSTS.Common.ActivatedDate'],
+    closedBy: wit['fields']['Microsoft.VSTS.Common.ClosedBy'],
+    closedDate: wit['fields']['Microsoft.VSTS.Common.ClosedDate'],
+    rank: wit['fields']['Microsoft.VSTS.Common.StackRank'] ? wit['fields']['Microsoft.VSTS.Common.StackRank'] : 100000000000
+  })
+}
+
+func.test = async (project) => {
+  const wits = (await rest.post(`${project}/_apis/wit/wiql?api-version=1.0`, { query: `Select [System.Id] From WorkItemLinks WHERE ((Source.[System.TeamProject] = @project and Source.[System.IterationPath] = 'NaomiFaux\\Milestone 5' and Source.[System.State] <> 'Removed') and ([System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward') and (Target.[System.WorkItemType] <> '')) mode(Recursive)` })).data
+  let data = new Map()
+  wits.workItemRelations.forEach(d => {
+    if (d.rel && d.rel === 'System.LinkTypes.Hierarchy-Forward') {
+      data.get(d.source.id).add(d.target.id)
+    } else {
+      data.set(d.target.id, new Set())
+    }
+  })
+  const strIds = [...data.keys()]
+  return strIds
 }
 
 export default func
