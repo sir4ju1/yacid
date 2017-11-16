@@ -54,10 +54,10 @@ class VstsRest extends RestGen {
       const body = ctx.request.body
       switch(body.eventType) {
         case 'workitem.created':
-          await Vsts.inserWit(body.resource)
+          await Vsts.inserWit(project, body.resource)
         break
         case 'workitem.updated':
-          await Vsts.inserWit(body.resource.revision)
+          await Vsts.updateWit(project, body.resource.revision)
         break
         default:
           await Vsts.getWorkitem(project)
@@ -85,6 +85,7 @@ class VstsRest extends RestGen {
       const wits = await Vsts.test(ctx.params.project)
       ctx.body = { success: true, data: wits }
     } catch (error) {
+      console.log(error)
       ctx.body = { success: false, error: error.message }
     }
   }
