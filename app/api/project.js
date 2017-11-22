@@ -129,7 +129,7 @@ export default class ProjectRest extends RestGen {
     const result = await Repo.findOne({ _id: id }).select({ password: 0 }).exec()
     ctx.body = { success: true, data: result }
   }
-  @route('post', 'repo/:repo/pull')
+  @route('get', 'repo/:repo/pull')
   async pull (ctx) {
     try {
       const repoId = ctx.params.repo
