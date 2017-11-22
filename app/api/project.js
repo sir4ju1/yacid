@@ -136,8 +136,7 @@ export default class ProjectRest extends RestGen {
       var repo = await Repo.findOne({ _id: repoId }).exec()
       if (repo) {
         const dec = Auth.decrypt(repo.password)
-        const branch = repo.repos.find(r => r.id === repoId)
-        var oid = await Pull(branch.location, repo.user, dec, branch.branch)
+        var oid = await Pull(repo.location, repo.user, dec, repo.branch)
         var result = {}
         if (repo.previous_oid && repo.previous_oid !== oid.oid) {
           result = Shell.exec(repo.args, repo.location)
